@@ -49,7 +49,7 @@ void setup () {
 
     // All pins from 4 to 7 are INPUTS, and from 14 to 17 are OUTPUTS
     for (uint8_t i = 0; i < (sizeof (boardDefinition)) / (sizeof (uint8_t)); i++)
-        pinMode (boardDefinition [i], INPUT),
+        pinMode (boardDefinition  [i], INPUT),
         pinMode (pinLedSelected   [i], OUTPUT);
 
     // Detect the pins inputs

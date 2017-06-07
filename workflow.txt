@@ -1,0 +1,10 @@
+testing   H-->I       J-->K
+         /     \     /     \
+master  A-->B-->C-->D-->E-->F-->G
+                     \           \
+release               D-----------G
+
+
+Simplification:
+
+release branch <-- master branch <-> testing branch
