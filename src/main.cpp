@@ -64,6 +64,9 @@ void setup () {
 
 uint16_t val = 0;
 
+
+// Esto es un comentario
+
 void loop () {
     if (millis () < 10000)
         myBuzzer.play (),
@@ -71,6 +74,7 @@ void loop () {
     else myBuzzer.stop ();
 
     myBuzzer.setFrequency (val);
+
 
     // myLed.update ();
     myBuzzer.update ();
