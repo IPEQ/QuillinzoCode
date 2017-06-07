@@ -1,7 +1,7 @@
 #ifndef _ZSTONES_H_
 #define _ZSTONES_H_
 
-namespace ZSTone {
+namespace ZSTones {
     #define NOTE_B0  31
     #define NOTE_C1  33
     #define NOTE_CS1 35

@@ -27,7 +27,6 @@
 ZSUtil::Buzzer myBuzzer;
 /// CLASSES ///
 
-
 /// VARIABLES ///
 // PIN
 ARDUINO_PIN boardDefinition []  = {4, 5, 6, 7};
