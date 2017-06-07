@@ -73,7 +73,7 @@ void loop () {
         val = map (millis (), 0, 10000, 0, 1000);
     else myBuzzer.stop ();
 
-    myBuzzer.setFrequency (val);
+    myBuzzer.setFrequency (val)
 
 
     // myLed.update ();
