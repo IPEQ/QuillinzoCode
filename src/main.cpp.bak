@@ -1,0 +1,81 @@
+#include <Arduino.h> // Not realy necesary, only for PlatformIO
+
+// quillinzoCode.ino
+// Currently in the 'master' branch
+
+
+///  I N C L U D E S  ///
+// #include "Tone.h"
+#include "ZSUtil.h"
+#include "ZSTones.h"
+
+#include <stdint.h>
+///  I N C L U D E S  ///
+
+
+///  D E F I N E  ///
+// #define DEBUG
+#define ARDUINO_PIN uint8_t
+#define UNDEFINED   -1
+#define OVERLOAD    -2
+///  D E F I N E  ///
+
+
+/// CLASSES ///
+// Tone buzzer;
+// ZSUtil::Led myLed;
+ZSUtil::Buzzer myBuzzer;
+/// CLASSES ///
+
+/// VARIABLES ///
+// PIN
+ARDUINO_PIN boardDefinition []  = {4, 5, 6, 7};
+ARDUINO_PIN pinLedSelected []   = {14, 15, 16 ,17};
+ARDUINO_PIN pinBuzzer           = 8;
+ARDUINO_PIN pinDefined          = UNDEFINED;
+ARDUINO_PIN pinLedEthernetReady = 9;
+
+// Boolean
+bool pinAlreadyDefined   = false;
+bool errInPinDeclaration = false;
+/// VARIABLES ///
+
+
+void setup () {
+    Serial.begin (9600);      // Initializing serial
+    // myLed.beginBlink (13, 1000, 500);
+    myBuzzer.beginAlarm (pinBuzzer, 200, 200);
+    // buzzer.begin (pinBuzzer); // Initializing buzzer
+
+    // All pins from 4 to 7 are INPUTS, and from 14 to 17 are OUTPUTS
+    for (uint8_t i = 0; i < (sizeof (boardDefinition)) / (sizeof (uint8_t)); i++)
+        pinMode (boardDefinition [i], INPUT),
+        pinMode (pinLedSelected   [i], OUTPUT);
+
+    // Detect the pins inputs
+    for (uint8_t i = 0; i < (sizeof (boardDefinition)) / (sizeof (uint8_t)); i++)
+        if (digitalRead (boardDefinition [i])) {
+            // if (pinAlreadyDefined) errInPinDeclaration = true; // Change this ...
+            if (pinAlreadyDefined) pinDefined = OVERLOAD;         // ... for this.
+            else pinDefined = i + 1, pinAlreadyDefined = true;
+        }
+        // if (errInPinDeclaration) pinDefined = OVERLOAD;        // Don't need this anymore.
+}
+
+uint16_t val = 0;
+
+
+// Esto es un comentario
+
+void loop () {
+    if (millis () < 10000)
+        myBuzzer.play (),
+        val = map (millis (), 0, 10000, 0, 1000);
+    else myBuzzer.stop ();
+
+    myBuzzer.setFrequency (val);
+
+
+    // myLed.update ();
+    myBuzzer.update ();
+}
