@@ -34,10 +34,10 @@
 // # D28 -> (74HC4511) pin 2
 // # D29 -> (74HC4511) pin 6
 // # D30 -> Decimal point
-// # D31 ->                         *
-// # D32 ->                         *
-// # D33 ->                         *
-// # D34 ->                         *
+// # D31 -> PIR #1
+// # D32 -> PIR #2
+// # D33 -> Ultrasonic trigger
+// # D34 -> Ultrasonic echo
 // # D35 ->                         *
 // # D36 ->                         *
 // # D37 ->                         *
@@ -86,40 +86,47 @@ T arraySize (T (&array) [tSize] ) {
     return tSize;
 }
 
+// Flags         12345678
+#define BOARD_1 B00000001 // 1
+#define BOARD_2 B00000010 // 2
+#define BOARD_3 B00000100 // 4
+#define BOARD_4 B00001000 // 8
+
+// #define BOARD_TEMPLATE B00000000
+
+#define BOARD_UNDEFINED B10000000 // No board selected
+#define BOARD_OVERLOAD  B01000000 // Multiple boards selected
+
+
 #ifdef DEBUG
-    #define BOARD 0 // Default board for debuging
+#define BOARD 0 // Default board for debuging
 #endif
 
 int boardSelectionPins [] = {22, 23, 24, 25};
 
+byte board;
+byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
+
 void setup () {
+    board = B00000000; // Blank definition
+
     #ifdef DEBUG
     Serial.begin (9600);
     #endif
 
     #ifdef BOARD
-
+    // If the default board is selected by software...
     #else
     // If no default board was defined...
-    for (int i = 0; i < arraySize (boardSelectionPins); i++) {
+    // Set the pins for defining the board
+    for (int i = 0; i < arraySize (boardSelectionPins); i++)
         pinMode (boardSelectionPins [i], INPUT);
-    }
 
-    int temp = 0;
-    for (int i = 0; i < arraySize(boardSelectionPins); i++)
-        temp += digitalRead(boardSelectionPins [i]);
-
-    if (temp > 1){
-        // Overload
-    }
-    else if (temp < 1) {
-        // no jumpers placed
-    }
-    else {
-        // unknow error
+    for (int i = 0; i < arraySize (boardSelectionPins); i++) {
+        if (digitalRead(boardSelectionPins [i]))
+            board |= boardList [i]; // this seems to work I gues
     }
     #endif
-
 }
 
 void loop () {
