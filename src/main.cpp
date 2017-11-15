@@ -1,5 +1,3 @@
-#include <Arduino.h>
-
 // ####
 // # Arduino Mega 2560 pin configuration
 // ####
@@ -76,6 +74,10 @@
 // # A15 ->                         *
 // ####
 
+// Headers
+#include <Arduino.h>
+#include <setjmp.h>
+
 // Degug code will only work when the line below is uncomented
 // #define DEBUG
 
@@ -94,7 +96,7 @@ T arraySize (T (&array) [tSize] ) {
 
 // #define BOARD_TEMPLATE B00000000
 
-#define BOARD_UNDEFINED B10000000 // No board selected
+#define BOARD_DEFINED B10000000 // No board selected
 #define BOARD_OVERLOAD  B01000000 // Multiple boards selected
 
 
@@ -114,18 +116,22 @@ void setup () {
     Serial.begin (9600);
     #endif
 
-    #ifdef BOARD
-    // If the default board is selected by software...
-    #else
+    #ifndef BOARD
     // If no default board was defined...
     // Set the pins for defining the board
     for (int i = 0; i < arraySize (boardSelectionPins); i++)
         pinMode (boardSelectionPins [i], INPUT);
 
     for (int i = 0; i < arraySize (boardSelectionPins); i++) {
-        if (digitalRead(boardSelectionPins [i]))
-            board |= boardList [i]; // this seems to work I gues
+        // This seems to work better
+        if (digitalRead(boardSelectionPins [i])) {
+            // If the board is not defined and there is a pin defined, then define the board and mark the board based in th eboard list
+            if (!(board & BOARD_DEFINED)) board |= (BOARD_DEFINED | boardList [i]);
+            else board |= BOARD_OVERLOAD; // If the board is already defined and there is another pin defined, then is an overload
+        }
+            // board |= boardList [i]; // this seems to work I gues
     }
+
     #endif
 }
 
