@@ -36,7 +36,7 @@
 // # D32 -> PIR #2
 // # D33 -> Ultrasonic trigger
 // # D34 -> Ultrasonic echo
-// # D35 ->                         *
+// # D35 -> Start alarm button
 // # D36 ->                         *
 // # D37 ->                         *
 // # D38 ->                         *
@@ -76,7 +76,7 @@
 
 // Headers
 #include <Arduino.h>
-#include <setjmp.h>
+#include <setjmp.h> // For error handling only
 
 // Degug code will only work when the line below is uncomented
 // #define DEBUG
@@ -99,15 +99,31 @@ T arraySize (T (&array) [tSize] ) {
 #define BOARD_DEFINED B10000000 // No board selected
 #define BOARD_OVERLOAD  B01000000 // Multiple boards selected
 
+#define ERROR_UNDEFINED 0x1
+#define ERROR_OVERLOAD 0x2
+#define ERROR_UNKNOW 0x3
+
 
 #ifdef DEBUG
 #define BOARD 0 // Default board for debuging
 #endif
 
+
+// Variabes
 int boardSelectionPins [] = {22, 23, 24, 25};
+
+bool runCode = false; // by default, just for safe measures, don't run any code
+
+static jmp_buf jmpBuff; // Jmp buffer
 
 byte board;
 byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
+// Variables
+
+
+// Functions
+// ...
+// Functions
 
 void setup () {
     board = B00000000; // Blank definition
@@ -132,9 +148,40 @@ void setup () {
             // board |= boardList [i]; // this seems to work I gues
     }
 
+    switch (setjmp(jmpBuff)) {
+        case 0: {
+            if (board & BOARD_OVERLOAD) longjmp (jmpBuff, ERROR_OVERLOAD); // If the board presents overloaded pins ...
+            else if (!(board & BOARD_DEFINED)) longjmp (jmpBuff, ERROR_UNDEFINED); // If the board present undefined pins ...
+            else longjmp (jmpBuff, ERROR_UNKNOW);
+            break;
+        }
+        case ERROR_OVERLOAD: {
+            // Show that there is an overload
+            runCode = false;
+            break;
+        }
+        case ERROR_UNDEFINED: {
+            // Show that the board is undefined
+            runCode = false;
+            break;
+        }
+        case ERROR_UNKNOW: {
+            // Unknow error, must inspect
+            runCode = false;
+            break;
+        }
+        default: {
+            // Default code runs if no error is present
+            runCode = true;
+            break;
+        }
+    } // Try - catch - trow
+
     #endif
 }
 
 void loop () {
-
+    if (runCode) {
+        // Run code here
+    }
 }
