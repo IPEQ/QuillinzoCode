@@ -110,11 +110,17 @@ T arraySize (T (&array) [tSize] ) {
 
 
 // Variabes
-int boardSelectionPins [] = {22, 23, 24, 25};
+// int boardSelectionPins [] = {22, 23, 24, 25};
+int boardSelectionPins [] = {7, 6, 5, 4};
 
-bool runCode = false; // by default, just for safe measures, don't run any code
+// bool runCode = false; // by default, just for safe measures, don't run any code
+bool runCode = true; // by default, just for safe measures, don't run any code
 
 static jmp_buf jmpBuff; // Jmp buffer
+
+// unsigned long currentMillis = 0;
+unsigned long previousMillis = 0;
+unsigned long interval = 0;
 
 byte board;
 byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
@@ -127,6 +133,9 @@ byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
 
 void setup () {
     board = B00000000; // Blank definition
+
+    pinMode (13, OUTPUT);
+    digitalWrite(13, LOW);
 
     #ifdef DEBUG
     Serial.begin (9600);
@@ -157,22 +166,26 @@ void setup () {
         }
         case ERROR_OVERLOAD: {
             // Show that there is an overload
-            runCode = false;
+            // runCode = false;
+            interval = 500;
             break;
         }
         case ERROR_UNDEFINED: {
             // Show that the board is undefined
-            runCode = false;
+            // runCode = false;
+            interval = 1000;
             break;
         }
         case ERROR_UNKNOW: {
             // Unknow error, must inspect
-            runCode = false;
+            // runCode = false;
+            interval = 2000;
             break;
         }
         default: {
             // Default code runs if no error is present
-            runCode = true;
+            // runCode = true;
+            interval = 100;
             break;
         }
     } // Try - catch - trow
@@ -182,6 +195,7 @@ void setup () {
 
 void loop () {
     if (runCode) {
-        // Run code here
+            if (millis () - previousMillis > interval)
+                digitalWrite(13, !digitalRead(13));
     }
 }
