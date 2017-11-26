@@ -1,3 +1,4 @@
+/*
 // ####
 // # Arduino Mega 2560 pin configuration
 // ####
@@ -73,13 +74,15 @@
 // # A14 ->                         *
 // # A15 ->                         *
 // ####
+*/
 
 // Headers
 #include <Arduino.h>
 #include <setjmp.h> // For error handling only
+#include <Tone.h>
 
 // Degug code will only work when the line below is uncomented
-// #define DEBUG
+#define DEBUG
 
 // Return the size of the array
 // Equivalent method: sizeof (arr) / sizeof (size_t);
@@ -94,20 +97,15 @@ T arraySize (T (&array) [tSize] ) {
 #define BOARD_3 B00000100 // 4
 #define BOARD_4 B00001000 // 8
 
-// #define BOARD_TEMPLATE B00000000
-
-#define BOARD_DEFINED B10000000 // No board selected
+#define BOARD_DEFINED   B10000000 // No board selected
 #define BOARD_OVERLOAD  B01000000 // Multiple boards selected
 
 #define ERROR_UNDEFINED 0x1
-#define ERROR_OVERLOAD 0x2
-#define ERROR_UNKNOW 0x3
+#define ERROR_OVERLOAD  0x2
+#define ERROR_UNKNOW    0x3
 
-
-#ifdef DEBUG
-#define BOARD 0 // Default board for debuging
-#endif
-
+// Only for testing the loop
+// #define BOARD BOARD_1
 
 // Variabes
 // int boardSelectionPins [] = {22, 23, 24, 25};
@@ -124,6 +122,8 @@ unsigned long interval = 0;
 
 byte board;
 byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
+
+Tone speaker;
 // Variables
 
 
@@ -132,70 +132,166 @@ byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
 // Functions
 
 void setup () {
-    board = B00000000; // Blank definition
+    board = B00000000; // Blank board
 
     pinMode (13, OUTPUT);
-    digitalWrite(13, LOW);
+    digitalWrite (13, LOW);
+
+    speaker.begin (3);
 
     #ifdef DEBUG
     Serial.begin (9600);
     #endif
 
     #ifndef BOARD
-    // If no default board was defined...
     // Set the pins for defining the board
-    for (int i = 0; i < arraySize (boardSelectionPins); i++)
-        pinMode (boardSelectionPins [i], INPUT);
-
     for (int i = 0; i < arraySize (boardSelectionPins); i++) {
-        // This seems to work better
-        if (digitalRead(boardSelectionPins [i])) {
-            // If the board is not defined and there is a pin defined, then define the board and mark the board based in th eboard list
-            if (!(board & BOARD_DEFINED)) board |= (BOARD_DEFINED | boardList [i]);
-            else board |= BOARD_OVERLOAD; // If the board is already defined and there is another pin defined, then is an overload
+        pinMode (boardSelectionPins [i], INPUT);
+        #ifdef DEBUG
+        Serial.print ("Arduino pin ");
+        Serial.print (boardSelectionPins [i]);
+        Serial.println (" programmed as INPUT");
+        #endif
+    }
+
+    #ifdef DEBUG
+    Serial.println ("---");
+    #endif
+
+    // Algorithm for board selection
+    for (int i = 0; i < arraySize (boardSelectionPins); i++) {
+        #ifdef DEBUG
+        Serial.print ("Board -> ");
+        Serial.println (board);
+
+        Serial.print ("Arduino pin ");
+        Serial.print (boardSelectionPins [i]);
+        Serial.print (" is ");
+        Serial.println (digitalRead (boardSelectionPins [i]));
+        #endif
+
+        // If the board is overloaded, break the for loop
+        if (board & BOARD_OVERLOAD) break;
+
+        // If a pin is selected
+        if (digitalRead (boardSelectionPins [i])) {
+            // If the board is not defined
+            if (!(board & BOARD_DEFINED) && !(board & BOARD_OVERLOAD)) {
+                // Define the board
+                board |= boardList [i];
+
+                // Mark as defined
+                board |= BOARD_DEFINED;
+                #ifdef DEBUG
+                Serial.println ("-> Board is defined!");
+                #endif
+            }
+            // If the board is already defined
+            else if (board & BOARD_DEFINED) {
+                #ifdef DEBUG
+                Serial.println ("-> The board is already defined!");
+                #endif
+                board &= ~BOARD_DEFINED;
+                board |= BOARD_OVERLOAD;
+            }
+            /*
+            // If the board was already defined
+            if (board & BOARD_DEFINED) {
+                #ifdef DEBUG
+                Serial.println ("Board is already defined!");
+                #endif
+                board |= BOARD_OVERLOAD;
+                // board &= ~BOARD_DEFINED;
+                // board |= (BOARD_DEFINED | boardList [i]);
+            }
+            else {
+                #ifdef DEBUG
+                Serial.println ("Board selected!");
+                #endif
+                // board |= BOARD_OVERLOAD; // If the board is already defined and there is another pin defined, then is an overload
+                // board |= (BOARD_DEFINED | boardList [i]);
+                board |= boardList [i];
+                board |= BOARD_DEFINED;
+            }
+            */
         }
-            // board |= boardList [i]; // this seems to work I gues
+        #ifdef DEBUG
+        Serial.println ("");
+        #endif
     }
 
     switch (setjmp(jmpBuff)) {
         case 0: {
+            #ifdef DEBUG
+            Serial.println ("Case 0 running...");
+            #endif
             if (board & BOARD_OVERLOAD) longjmp (jmpBuff, ERROR_OVERLOAD); // If the board presents overloaded pins ...
             else if (!(board & BOARD_DEFINED)) longjmp (jmpBuff, ERROR_UNDEFINED); // If the board present undefined pins ...
-            else longjmp (jmpBuff, ERROR_UNKNOW);
+            // else longjmp (jmpBuff, ERROR_UNKNOW);
             break;
         }
         case ERROR_OVERLOAD: {
             // Show that there is an overload
+            #ifdef DEBUG
+            Serial.println ("Error: Board overload");
+            #endif
             // runCode = false;
-            interval = 500;
+            interval = 3000;
             break;
         }
         case ERROR_UNDEFINED: {
             // Show that the board is undefined
-            // runCode = false;
-            interval = 1000;
-            break;
-        }
-        case ERROR_UNKNOW: {
-            // Unknow error, must inspect
+            #ifdef DEBUG
+            Serial.println ("Error: Board is undefined");
+            #endif
             // runCode = false;
             interval = 2000;
             break;
         }
+        case ERROR_UNKNOW: {
+            // Unknow error, must inspect
+            #ifdef DEBUG
+            Serial.println ("Error: Unknow error, check manual");
+            #endif
+            // runCode = false;
+            interval = 1000;
+            break;
+        }
         default: {
+            Serial.println ("test");
             // Default code runs if no error is present
+            #ifdef DEBUG
+            Serial.println ("No error found!");
+            Serial.print ("Board #");
+            for (int i = 0; i < arraySize (boardSelectionPins); i++) {
+                if (digitalRead(boardSelectionPins [i])) {
+                    Serial.println (boardSelectionPins [i]);
+                    break;
+                }
+            }
+            // Serial.printLn (" selected");
+            #endif
             // runCode = true;
             interval = 100;
             break;
         }
     } // Try - catch - trow
+    #endif
 
+    speaker.play (700 , 150);
+    delay (150);
+    speaker.play (830, 150);
+    delay (150);
+    speaker.play (1050, 150);
+
+    #ifdef DEBUG
+    Serial.println ("Running code...");
     #endif
 }
 
 void loop () {
     if (runCode) {
             if (millis () - previousMillis > interval)
-                digitalWrite(13, !digitalRead(13));
+                digitalWrite(13, !digitalRead(13)), previousMillis = millis ();
     }
 }
