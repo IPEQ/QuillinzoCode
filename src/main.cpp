@@ -21,7 +21,7 @@ D16 -> TX2                     *
 D17 -> RX2                     *
 D18 -> Motion sensor 1 | Interrupt 5
 D19 -> Motion sensor 2 | Interrupt 4
-D20 -> Interrupt 3 | SDA       *
+D20 -> Motion sensor button
 D21 -> Interrupt 2 | SCL       *
 D22 ->                         *
 D23 ->                         *
@@ -136,6 +136,11 @@ byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
 // Functions
 void motionSensorTriggered (int sensorReference) {
     // Send mail
+    #ifdef DEBUG
+    Serial.print ("Motion sensor ");
+    Serial.print (sensorReference);
+    Serial.println (" Activated");
+    #endif
 }
 void motionSensorTriggered_1 () {
     motionSensorTriggered (1);
