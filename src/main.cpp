@@ -1,3 +1,5 @@
+// TODO: Update pin usage
+
 /*
 // ####
 // # Arduino Mega 2560 pin configuration
@@ -126,6 +128,7 @@ Tone buzzer;
 
 // Functions
 // ...
+// TODO: Add sound functions here
 // Functions
 
 void setup () {
@@ -193,26 +196,6 @@ void setup () {
                 Serial.println ("-> The board is already defined!");
                 #endif // DEBUG
             }
-            /*
-            // If the board was already defined
-            if (board & BOARD_DEFINED) {
-                #ifdef DEBUG
-                Serial.println ("Board is already defined!");
-                #endif
-                board |= BOARD_OVERLOAD;
-                // board &= ~BOARD_DEFINED;
-                // board |= (BOARD_DEFINED | boardList [i]);
-            }
-            else {
-                #ifdef DEBUG
-                Serial.println ("Board selected!");
-                #endif
-                // board |= BOARD_OVERLOAD; // If the board is already defined and there is another pin defined, then is an overload
-                // board |= (BOARD_DEFINED | boardList [i]);
-                board |= boardList [i];
-                board |= BOARD_DEFINED;
-            }
-            */
         }
         #ifdef DEBUG
         Serial.println ("");
@@ -258,7 +241,7 @@ void setup () {
     // need to fix this tho ('default' case not being detected at all)
     // technically, the 'default' case should be the 'unknow error',
     // and a special case where a 'board defined' is thrown. (contradictory to what error handling should be)
-    
+
     /*
     switch (setjmp(jmpBuff)) {
         case 0: {
