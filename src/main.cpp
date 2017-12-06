@@ -78,7 +78,7 @@
 
 // Headers
 #include <Arduino.h>
-#include <setjmp.h> // For error handling only
+// #include <setjmp.h> // For error handling only
 #include <Tone.h>
 
 // Degug code will only work when the line below is uncomented
@@ -102,28 +102,25 @@ T arraySize (T (&array) [tSize] ) {
 
 #define ERROR_UNDEFINED 0x1
 #define ERROR_OVERLOAD  0x2
-#define ERROR_UNKNOW    0x3
 
-// Only for testing the loop
+// Only for testing
+// bypass setup
 // #define BOARD BOARD_1
 
 // Variabes
-// int boardSelectionPins [] = {22, 23, 24, 25};
 int boardSelectionPins [] = {7, 6, 5, 4};
 
-// bool runCode = false; // by default, just for safe measures, don't run any code
-bool runCode = true; // by default, just for safe measures, don't run any code
+bool runCode = false; // by default, just for safe measures, don't run any code
 
-static jmp_buf jmpBuff; // Jmp buffer
+// static jmp_buf jmpBuff; // Jmp buffer
 
-// unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 unsigned long interval = 0;
 
 byte board;
 byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
 
-Tone speaker;
+Tone buzzer;
 // Variables
 
 
@@ -137,11 +134,11 @@ void setup () {
     pinMode (13, OUTPUT);
     digitalWrite (13, LOW);
 
-    speaker.begin (3);
+    buzzer.begin (11);
 
     #ifdef DEBUG
     Serial.begin (9600);
-    #endif
+    #endif // DEBUG
 
     #ifndef BOARD
     // Set the pins for defining the board
@@ -151,12 +148,12 @@ void setup () {
         Serial.print ("Arduino pin ");
         Serial.print (boardSelectionPins [i]);
         Serial.println (" programmed as INPUT");
-        #endif
+        #endif // DEBUG
     }
 
     #ifdef DEBUG
     Serial.println ("---");
-    #endif
+    #endif // DEBUG
 
     // Algorithm for board selection
     for (int i = 0; i < arraySize (boardSelectionPins); i++) {
@@ -168,7 +165,7 @@ void setup () {
         Serial.print (boardSelectionPins [i]);
         Serial.print (" is ");
         Serial.println (digitalRead (boardSelectionPins [i]));
-        #endif
+        #endif // DEBUG
 
         // If the board is overloaded, break the for loop
         if (board & BOARD_OVERLOAD) break;
@@ -177,22 +174,24 @@ void setup () {
         if (digitalRead (boardSelectionPins [i])) {
             // If the board is not defined
             if (!(board & BOARD_DEFINED) && !(board & BOARD_OVERLOAD)) {
-                // Define the board
-                board |= boardList [i];
+                // Define the board and mark it as 'defined'
+                board |= boardList [i] | BOARD_DEFINED;
 
-                // Mark as defined
-                board |= BOARD_DEFINED;
                 #ifdef DEBUG
                 Serial.println ("-> Board is defined!");
-                #endif
+                #endif // DEBUG
             }
             // If the board is already defined
             else if (board & BOARD_DEFINED) {
+                // Undefine the board
+                board &= ~BOARD_DEFINED;
+
+                // and mark it as 'overload'
+                board |= BOARD_OVERLOAD;
+
                 #ifdef DEBUG
                 Serial.println ("-> The board is already defined!");
-                #endif
-                board &= ~BOARD_DEFINED;
-                board |= BOARD_OVERLOAD;
+                #endif // DEBUG
             }
             /*
             // If the board was already defined
@@ -220,14 +219,61 @@ void setup () {
         #endif
     }
 
+    // Algorithm for error handling
+    if (board & BOARD_OVERLOAD) {
+        #ifdef DEBUG
+        Serial.println ("Error: Board overload");
+        #endif
+        // Play sound of error overload, still testing tho
+    }
+    else if (!(board & BOARD_DEFINED)) {
+        #ifdef DEBUG
+        Serial.println ("Error: Board is undefined");
+        #endif
+        // Play the sound of an undefined board, still testing tho
+    }
+    else {
+        #ifdef DEBUG
+        Serial.println ("No error found!");
+        Serial.print ("Board #");
+        for (int i = 0; i < arraySize (boardSelectionPins); i++) {
+            if (digitalRead(boardSelectionPins [i])) {
+                Serial.print (i + 1);
+                break;
+            }
+        }
+        Serial.println (" selected!");
+        #endif
+        runCode = true;
+        interval = 100;
+
+        buzzer.play (700 , 150);
+        delay (150);
+        buzzer.play (830, 150);
+        delay (150);
+        buzzer.play (1050, 150);
+    }
+
+    // this switch must be of some help somewhere
+    // need to fix this tho ('default' case not being detected at all)
+    // technically, the 'default' case should be the 'unknow error',
+    // and a special case where a 'board defined' is thrown. (contradictory to what error handling should be)
+    
+    /*
     switch (setjmp(jmpBuff)) {
         case 0: {
             #ifdef DEBUG
-            Serial.println ("Case 0 running...");
+            Serial.println ("\'Try\' block running...");
             #endif
-            if (board & BOARD_OVERLOAD) longjmp (jmpBuff, ERROR_OVERLOAD); // If the board presents overloaded pins ...
-            else if (!(board & BOARD_DEFINED)) longjmp (jmpBuff, ERROR_UNDEFINED); // If the board present undefined pins ...
-            // else longjmp (jmpBuff, ERROR_UNKNOW);
+
+            // If the board presents overloaded pins
+            if (board & BOARD_OVERLOAD)
+                longjmp (jmpBuff, ERROR_OVERLOAD);}
+
+            // Else, if the board present undefined pins
+            else if (!(board & BOARD_DEFINED))
+                longjmp (jmpBuff, ERROR_UNDEFINED);
+
             break;
         }
         case ERROR_OVERLOAD: {
@@ -246,15 +292,6 @@ void setup () {
             #endif
             // runCode = false;
             interval = 2000;
-            break;
-        }
-        case ERROR_UNKNOW: {
-            // Unknow error, must inspect
-            #ifdef DEBUG
-            Serial.println ("Error: Unknow error, check manual");
-            #endif
-            // runCode = false;
-            interval = 1000;
             break;
         }
         default: {
@@ -276,22 +313,31 @@ void setup () {
             break;
         }
     } // Try - catch - trow
-    #endif
-
-    speaker.play (700 , 150);
-    delay (150);
-    speaker.play (830, 150);
-    delay (150);
-    speaker.play (1050, 150);
+*/
+    #endif // BOARD
 
     #ifdef DEBUG
     Serial.println ("Running code...");
-    #endif
+    #endif // DEBUG
+
+    // Do not press any button, not even the interrupts, until you hear the following sound
+    {
+        int duration = 150;
+        int freq     = 830;
+
+        buzzer.play (freq, duration);
+        delay (duration * 2);
+        buzzer.play (freq, duration);
+        delay (duration * 2);
+        buzzer.play (freq, duration);
+        delay (duration * 2);
+        buzzer.play (freq, duration);
+    }
 }
 
 void loop () {
     if (runCode) {
-            if (millis () - previousMillis > interval)
-                digitalWrite(13, !digitalRead(13)), previousMillis = millis ();
+        if (millis () - previousMillis > interval)
+            digitalWrite(13, !digitalRead(13)), previousMillis = millis ();
     }
 }
