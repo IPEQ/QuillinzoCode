@@ -7,4 +7,4 @@ release               D-----------G
 
 Simplification:
 
-release branch <-- master branch <-> testing branch
+release branch <- master branch <-> testing branch
