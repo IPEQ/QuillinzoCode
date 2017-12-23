@@ -84,7 +84,7 @@
 #include <Tone.h>
 
 // Degug code will only work when the line below is uncomented
-#define DEBUG
+#define DEBUG 0
 
 // Return the size of the array
 // Equivalent method: sizeof (arr) / sizeof (size_t);
@@ -106,14 +106,15 @@ T arraySize (T (&array) [tSize] ) {
 #define ERROR_OVERLOAD  0x2
 
 // Only for testing
-// bypass setup
-// #define BOARD BOARD_1
+// bypass setup, example: ´#define BOARD BOARD_1´
+#define BOARD 0
 
 // Variabes
 int boardSelectionPins [] = {7, 6, 5, 4};
 
 bool runCode = false; // by default, just for safe measures, don't run any code
 
+// pls fix this
 // static jmp_buf jmpBuff; // Jmp buffer
 
 unsigned long previousMillis = 0;
@@ -139,28 +140,29 @@ void setup () {
 
     buzzer.begin (11);
 
-    #ifdef DEBUG
+    #if DEBUG == 1
     Serial.begin (9600);
     #endif // DEBUG
 
-    #ifndef BOARD
+    #if BOARD == 0 // If the board is not defined by preprocessor
+
     // Set the pins for defining the board
     for (int i = 0; i < arraySize (boardSelectionPins); i++) {
         pinMode (boardSelectionPins [i], INPUT);
-        #ifdef DEBUG
+        #if DEBUG == 1
         Serial.print ("Arduino pin ");
         Serial.print (boardSelectionPins [i]);
         Serial.println (" programmed as INPUT");
         #endif // DEBUG
     }
 
-    #ifdef DEBUG
+    #if DEBUG == 1
     Serial.println ("---");
     #endif // DEBUG
 
     // Algorithm for board selection
     for (int i = 0; i < arraySize (boardSelectionPins); i++) {
-        #ifdef DEBUG
+        #if DEBUG == 1
         Serial.print ("Board -> ");
         Serial.println (board);
 
@@ -180,7 +182,7 @@ void setup () {
                 // Define the board and mark it as 'defined'
                 board |= boardList [i] | BOARD_DEFINED;
 
-                #ifdef DEBUG
+                #if DEBUG == 1
                 Serial.println ("-> Board is defined!");
                 #endif // DEBUG
             }
@@ -192,31 +194,31 @@ void setup () {
                 // and mark it as 'overload'
                 board |= BOARD_OVERLOAD;
 
-                #ifdef DEBUG
+                #if DEBUG == 1
                 Serial.println ("-> The board is already defined!");
                 #endif // DEBUG
             }
         }
-        #ifdef DEBUG
+        #if DEBUG == 1
         Serial.println ("");
         #endif
     }
 
     // Algorithm for error handling
     if (board & BOARD_OVERLOAD) {
-        #ifdef DEBUG
+        #if DEBUG == 1
         Serial.println ("Error: Board overload");
         #endif
         // Play sound of error overload, still testing tho
     }
     else if (!(board & BOARD_DEFINED)) {
-        #ifdef DEBUG
+        #if DEBUG == 1
         Serial.println ("Error: Board is undefined");
         #endif
         // Play the sound of an undefined board, still testing tho
     }
     else {
-        #ifdef DEBUG
+        #if DEBUG == 1
         Serial.println ("No error found!");
         Serial.print ("Board #");
         for (int i = 0; i < arraySize (boardSelectionPins); i++) {
@@ -299,7 +301,7 @@ void setup () {
 */
     #endif // BOARD
 
-    #ifdef DEBUG
+    #if DEBUG == 1
     Serial.println ("Running code...");
     #endif // DEBUG
 
