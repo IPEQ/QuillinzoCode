@@ -83,7 +83,7 @@
 // #include <setjmp.h> // For error handling only
 #include <Tone.h>
 
-// Degug code will only work when the line below is uncomented
+// Degug code will only work when is set to '1'
 #define DEBUG 0
 
 // Return the size of the array

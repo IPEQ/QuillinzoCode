@@ -8,3 +8,6 @@ release               D-----------G
 Simplification:
 
 release branch <- master branch <-> testing branch
+
+branches starting with 'test-' are implementations or ideas.
+branches starting with 'fix-' are (or try to be) workarounds or fixes to previous problems
