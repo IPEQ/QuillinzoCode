@@ -1,4 +1,5 @@
 // TODO: Update pin usage
+// TODO: Make 'util.h' for flags
 
 /*
 // ####
@@ -80,11 +81,20 @@
 
 // Headers
 #include <Arduino.h>
-// #include <setjmp.h> // For error handling only
+#include <setjmp.h> // For error handling only
 #include <Tone.h>
 
 // Degug code will only work when is set to '1'
 #define DEBUG 0
+
+// Special debug code for jmp, only if is set to '1'
+#define DEBUG_SETJMP 1
+
+// Very obious falg...
+#define PLAY_SOUND 1
+
+// Very obious flag...
+#define USE_SETJMP_FOR_ERROR_HANDLING 1
 
 // Return the size of the array
 // Equivalent method: sizeof (arr) / sizeof (size_t);
@@ -111,19 +121,24 @@ T arraySize (T (&array) [tSize] ) {
 
 // Variabes
 int boardSelectionPins [] = {7, 6, 5, 4};
+int buzzerPin = 11;
 
-bool runCode = false; // by default, just for safe measures, don't run any code
+// by default, just to be safe, don't run any code
+bool runCode = false;
 
 // pls fix this
-// static jmp_buf jmpBuff; // Jmp buffer
+static jmp_buf jmpBuffer; // Jmp buffer
 
+// TODO: Delete this later
 unsigned long previousMillis = 0;
 unsigned long interval = 0;
 
 byte board;
 byte boardList [] = {BOARD_1, BOARD_2, BOARD_3, BOARD_4};
 
+#if PLAY_SOUND == 1
 Tone buzzer;
+#endif
 // Variables
 
 
@@ -135,12 +150,11 @@ Tone buzzer;
 void setup () {
     board = B00000000; // Blank board
 
-    pinMode (13, OUTPUT);
-    digitalWrite (13, LOW);
-
+    #if PLAY_SOUND == 1
     buzzer.begin (11);
+    #endif
 
-    #if DEBUG == 1
+    #if DEBUG == 1 || DEBUG_SETJMP == 1
     Serial.begin (9600);
     #endif // DEBUG
 
@@ -205,6 +219,7 @@ void setup () {
     }
 
     // Algorithm for error handling
+    #if USE_SETJMP_FOR_ERROR_HANDLING == 0
     if (board & BOARD_OVERLOAD) {
         #if DEBUG == 1
         Serial.println ("Error: Board overload");
@@ -238,6 +253,9 @@ void setup () {
         delay (150);
         buzzer.play (1050, 150);
     }
+    #elif USE_SETJMP_FOR_ERROR_HANDLING == 1
+
+    #endif
 
     // this switch must be of some help somewhere
     // need to fix this tho ('default' case not being detected at all)
